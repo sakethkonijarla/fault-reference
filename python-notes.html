@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Complete Python Learning Index</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa7bf;
+      --accent:#7c3aed;
+      --green:#16a34a;
+      --blue:#0ea5e9;
+      --red:#ef4444;
+      --purple:#8b5cf6;
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      --card-border: rgba(255,255,255,0.04);
+      --radius:12px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:
+      linear-gradient(180deg,#071028 0%, #071827 40%, #071028 100%);color:#e6eef8}
+    .wrap{max-width:1200px;margin:28px auto;padding:24px}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+    .logo{
+      width:64px;height:64px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#06b6d4);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      box-shadow:0 6px 30px rgba(12,18,40,0.6);color:white;font-size:20px
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .topbar{display:flex;gap:12px;align-items:center;margin:18px 0}
+    .search{
+      flex:1;display:flex;align-items:center;background:var(--glass);border:1px solid var(--card-border);
+      padding:10px 12px;border-radius:10px;gap:8px;backdrop-filter: blur(6px)
+    }
+    .search input{flex:1;background:transparent;border:0;color:inherit;font-size:14px;outline:none}
+    .format-btn{background:transparent;border:1px solid var(--card-border);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
+    nav.index{
+      background:linear-gradient(180deg,var(--card),#071226);padding:16px;border-radius:var(--radius);
+      border:1px solid var(--card-border);height:calc(100vh - 220px);overflow:auto;
+    }
+    nav h3{margin:0 0 8px 0;font-size:14px}
+    .toc{list-style:none;padding:0;margin:0}
+    .toc li{margin:6px 0}
+    .toc a{display:block;padding:8px 10px;border-radius:8px;color:#dbeafe;text-decoration:none;font-size:13px}
+    .toc a:hover{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:white}
+    .level-badge{font-size:11px;padding:4px 8px;border-radius:999px;color:white;margin-left:8px}
+    .content{height:calc(100vh - 220px);overflow:auto;padding:8px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid var(--card-border);padding:14px;border-radius:12px;min-height:120px;
+      display:flex;flex-direction:column;gap:8px;transition:transform .12s ease,box-shadow .12s ease
+    }
+    .card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    .card h4{margin:0;font-size:15px}
+    .card p{margin:0;color:var(--muted);font-size:13px}
+    .links{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .links a{font-size:13px;padding:6px 8px;border-radius:8px;text-decoration:none;color:white;background:rgba(255,255,255,0.03)}
+    .tag{font-size:12px;padding:6px 8px;border-radius:8px;color:white}
+    .tag.begin{background:linear-gradient(90deg,var(--green),#34d399)}
+    .tag.inter{background:linear-gradient(90deg,var(--blue),#60a5fa)}
+    .tag.adv{background:linear-gradient(90deg,var(--red),#fb7185)}
+    .tag.lib{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+    .progress-wrap{height:8px;background:var(--glass-2);border-radius:999px;margin-bottom:12px;overflow:hidden}
+    .progress{height:100%;width:0;background:linear-gradient(90deg,#06b6d4,#7c3aed)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    /* small */
+    @media (max-width:880px){
+      .layout{grid-template-columns:1fr}
+      nav.index{height:auto}
+      .content{height:auto}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">Py</div>
+      <div>
+        <h1>The Complete Python Learning Index</h1>
+        <p class="lead">A single-file, colorful index to learn Python from basics to advanced — click any card to open curated resources.</p>
+      </div>
+    </header>
+
+    <div class="topbar">
+      <div class="search" role="search" aria-label="Search topics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:.9"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></circle></svg>
+        <input id="searchInput" placeholder="Search topics, e.g., decorators, pandas, asyncio..." />
+        <button class="format-btn" onclick="resetSearch()">Reset</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="format-btn" onclick="toggleView()">Toggle View</button>
+        <button class="format-btn" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <nav class="index" aria-label="Index">
+        <h3>Index</h3>
+        <div class="progress-wrap" title="Scroll progress">
+          <div id="progress" class="progress"></div>
+        </div>
+        <ul class="toc" id="tocList">
+          <li><a href="#part1">📗 PART 1 — THE BASICS</a></li>
+          <li><a href="#intro">1. Introduction to Python</a></li>
+          <li><a href="#vars">2. Variables & Data Types</a></li>
+          <li><a href="#ops">3. Operators</a></li>
+          <li><a href="#flow">4. Control Flow</a></li>
+          <li><a href="#funcs">5. Functions</a></li>
+
+          <li style="margin-top:10px"><a href="#part2">📘 PART 2 — INTERMEDIATE</a></li>
+          <li><a href="#data-structures">6. Data Structures</a></li>
+          <li><a href="#strings">7. String Manipulation</a></li>
+          <li><a href="#fileio">8. File I/O</a></li>
+          <li><a href="#errors">9. Error Handling & Exceptions</a></li>
+          <li><a href="#modules">10. Modules & Packages</a></li>
+
+          <li style="margin-top:10px"><a href="#part3">📙 PART 3 — OBJECT-ORIENTED PROGRAMMING</a></li>
+          <li><a href="#classes">11. Classes & Objects</a></li>
+          <li><a href="#inheritance">12. Inheritance & Polymorphism</a></li>
+          <li><a href="#dunder">13. Magic (Dunder) Methods</a></li>
+          <li><a href="#iter-gen">14. Iterators & Generators</a></li>
+          <li><a href="#decorators">15. Decorators & Closures</a></li>
+
+          <li style="margin-top:10px"><a href="#part4">📕 PART 4 — ADVANCED PYTHON</a></li>
+          <li><a href="#comprehensions">16. Comprehensions</a></li>
+          <li><a href="#functional">17. Functional Programming</a></li>
+          <li><a href="#concurrency">18. Concurrency & Async</a></li>
+          <li><a href="#regex">19. Regular Expressions (re)</a></li>
+          <li><a href="#context">20. Context Managers</a></li>
+          <li><a href="#typing">21. Type Hints & Annotations</a></li>
+          <li><a href="#meta">22. Metaclasses & Descriptors</a></li>
+          <li><a href="#perf">23. Memory & Performance</a></li>
+
+          <li style="margin-top:10px"><a href="#part5">🔬 PART 5 — STANDARD LIBRARY</a></li>
+          <li><a href="#os-sys">24. os, sys, pathlib</a></li>
+          <li><a href="#datetime">25. datetime & time</a></li>
+          <li><a href="#json-csv">26. json, csv, xml</a></li>
+          <li><a href="#collections">27. collections & itertools</a></li>
+          <li><a href="#math-random">28. math, random, statistics</a></li>
+          <li><a href="#logging">29. logging & debugging</a></li>
+          <li><a href="#subprocess">30. subprocess & shutil</a></li>
+
+          <li style="margin-top:10px"><a href="#part6">📦 PART 6 — KEY LIBRARIES</a></li>
+          <li><a href="#numpy">31. NumPy</a></li>
+          <li><a href="#pandas">32. Pandas</a></li>
+          <li><a href="#plotting">33. Matplotlib & Seaborn</a></li>
+          <li><a href="#requests">34. Requests & BeautifulSoup</a></li>
+          <li><a href="#flask">35. Flask</a></li>
+          <li><a href="#fastapi">36. FastAPI</a></li>
+          <li><a href="#sqlalchemy">37. SQLAlchemy</a></li>
+          <li><a href="#sklearn">38. Scikit-learn</a></li>
+          <li><a href="#testing">39. pytest & unittest</a></li>
+          <li><a href="#venv">40. Virtual Environments & pip</a></li>
+
+          <li style="margin-top:12px"><a href="#bonus">🏆 BONUS — FULL COURSE RESOURCES</a></li>
+        </ul>
+      </nav>
+
+      <main class="content" id="mainContent">
+        <!-- PART 1 -->
+        <section id="part1"><h2>📗 PART 1 — THE BASICS</h2></section>
+
+        <div class="grid" id="cardsGrid">
+          <!-- 1 -->
+          <article class="card" data-tags="intro basics beginner">
+            <h4 id="intro">1. Introduction to Python <span class="tag begin">Beginner</span></h4>
+            <p>What is Python, installation, IDEs (VS Code, PyCharm, Jupyter).</p>
+            <div class="links">
+              <a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">Python Official Docs — Getting Started</a>
+              <a href="https://realpython.com/" target="_blank" rel="noopener">Real Python — Python Basics</a>
+            </div>
+          </article>
+
+          <!-- 2 -->
+          <article class="card" data-tags="variables basics beginner">
+            <h4 id="vars">2. Variables & Data Types <span class="tag begin">Beginner</span></h4>
+            <p>int, float, str, bool, None, type(), id()</p>
+            <div class="links">
+              <a href="https://www.w3schools.com/python/python_variables.asp" target="_blank" rel="noopener">W3Schools — Python Variables</a>
+              <a href="https://realpython.com/python-variables/" target="_blank" rel="noopener">Real Python — Variables</a>
+            </div>
+          </article>
+
+          <!-- 3 -->
+          <article class="card" data-tags="operators basics beginner">
+            <h4 id="ops">3. Operators <span class="tag begin">Beginner</span></h4>
+            <p>Arithmetic, comparison, logical, bitwise, assignment, identity, membership</p>
+            <div class="links">
+              <a href="https://www.w3schools.com/python/python_operators.asp" target="_blank" rel="noopener">W3Schools — Python Operators</a>
+            </div>
+          </article>
+
+          <!-- 4 -->
+          <article class="card" data-tags="control flow basics beginner">
+            <h4 id="flow">4. Control Flow <span class="tag begin">Beginner</span></h4>
+            <p>if/elif/else, while, for, break, continue, pass, match-case (3.10+)</p>
+            <div class="links">
+              <a href="https://docs.python.org/3/tutorial/controlflow.html" target="_blank" rel="noopener">Python Docs — Control Flow</a>
+              <a href="https://realpython.com/python-conditional-statements/" target="_blank" rel="noopener">Real Python — Conditional Statements</a>
+            </div>
+          </article>
+
+          <!-- 5 -->
+          <article class="card" data-tags="functions beginner">
+            <h4 id="funcs">5. Functions <span class="tag begin">Beginner</span></h4>
+            <p>def, return, *args, **kwargs, default args, lambda, scope (LEGB)</p>
+            <div class="links">
+              <a href="https://realpython.com/defining-your-own-python-function/" target="_blank" rel="noopener">Real Python — Functions</a>
+              <a href="https://docs.python.org/3/tutorial/controlflow.html#defining-functions" target="_blank" rel="noopener">Python Docs — Functions</a>
+            </div>
+          </article>
+
+          <!-- PART 2 header card -->
+          <article class="card" style="grid-column:1/-1;background:linear-gradient(90deg,var(--blue),#0ea5e9);color:#021025">
+            <h4 id="part2">📘 PART 2 — INTERMEDIATE</h4>
+            <p style="color:rgba(2,16,37,0.9)">Data structures, strings, file I/O, exceptions, modules & packages.</p>
+          </article>
+
+          <!-- 6 -->
+          <article class="card" data-tags="lists tuples dicts intermediate">
+            <h4 id="data-structures">6. Data Structures <span class="tag inter">Intermediate</span></h4>
+            <p>Lists, Tuples, Sets, Dictionaries — methods, slicing, nesting</p>
+            <div class="links">
+              <a href="https://realpython.com/python-lists-tuples/" target="_blank" rel="noopener">Real Python — Lists & Tuples</a>
+              <a href="https://realpython.com/python-dicts/" target="_blank" rel="noopener">Real Python — Dictionaries</a>
+              <a href="https://realpython.com/python-sets/" target="_blank" rel="noopener">Real Python — Sets</a>
+            </div>
+          </article>
+
+          <!-- 7 -->
+          <article class="card" data-tags="strings intermediate">
+            <h4 id="strings">7. String Manipulation <span class="tag inter">Intermediate</span></h4>
+            <p>Formatting (f-strings), methods, regex basics, encoding</p>
+            <div class="links">
+              <a href="https://realpython.com/python-strings/" target="_blank" rel="noopener">Real Python — Strings</a>
+              <a href="https://www.w3schools.com/python/python_strings_methods.asp" target="_blank" rel="noopener">W3Schools — String Methods</a>
+            </div>
+          </article>
+
+          <!-- 8 -->
+          <article class="card" data-tags="file io intermediate">
+            <h4 id="fileio">8. File I/O <span class="tag inter">Intermediate</span></h4>
+            <p>open(), read/write/append, with statement, pathlib</p>
+            <div class="links">
+              <a href="https://realpython.com/read-write-files-python/" target="_blank" rel="noopener">Real Python — File I/O</a>
+            </div>
+          </article>
+
+          <!-- 9 -->
+          <article class="card" data-tags="exceptions intermediate">
+            <h4 id="errors">9. Error Handling & Exceptions <span class="tag inter">Intermediate</span></h4>
+            <p>try/except/else/finally, raising exceptions, custom exceptions</p>
+            <div class="links">
+              <a href="https://realpython.com/python-exceptions/" target="_blank" rel="noopener">Real Python — Exceptions</a>
+              <a href="https://docs.python.org/3/tutorial/errors.html" target="_blank" rel="noopener">Python Docs — Errors</a>
+            </div>
+          </article>
+
+          <!-- 10 -->
+          <article class="card" data-tags="modules packages intermediate">
+            <h4 id="modules">10. Modules & Packages <span class="tag inter">Intermediate</span></h4>
+            <p>import, from…import, __init__.py, sys.path, pip</p>
+            <div class="links">
+              <a href="https://realpython.com/python-modules-packages/" target="_blank" rel="noopener">Real Python — Modules</a>
+              <a href="https://docs.python.org/3/tutorial/modules.html" target="_blank" rel="noopener">Python Docs — Modules</a>
+            </div>
+          </article>
+
+          <!-- PART 3 header -->
+          <article class="card" style="grid-column:1/-1;background:linear-gradient(90deg,var(--purple),#8b5cf6);color:#071026">
+            <h4 id="part3">📙 PART 3 — OBJECT-ORIENTED PROGRAMMING</h4>
+            <p style="color:rgba(7,10,20,0.9)">Classes, inheritance, magic methods, iterators, decorators.</p>
+          </article>
+
+          <!-- 11 -->
+          <article class="card" data-tags="oop classes intermediate">
+            <h4 id="classes">11. Classes & Objects <span class="tag inter">Intermediate</span></h4>
+            <p>class, __init__, self, attributes, methods, class vs instance</p>
+            <div class="links">
+              <a href="https://realpython.com/python3-object-oriented-programming/" target="_blank" rel="noopener">Real Python — OOP</a>
+              <a href="https://docs.python.org/3/tutorial/classes.html" target="_blank" rel="noopener">Python Docs — Classes</a>
+            </div>
+          </article>
+
+          <!-- 12 -->
+          <article class="card" data-tags="inheritance intermediate">
+            <h4 id="inheritance">12. Inheritance & Polymorphism <span class="tag inter">Intermediate</span></h4>
+            <p>Single/multiple inheritance, super(), method overriding, MRO</p>
+            <div class="links">
+              <a href="https://realpython.com/inheritance-composition-python/" target="_blank" rel="noopener">Real Python — Inheritance</a>
+            </div>
+          </article>
+
+          <!-- 13 -->
+          <article class="card" data-tags="dunder advanced">
+            <h4 id="dunder">13. Magic (Dunder) Methods <span class="tag adv">Advanced</span></h4>
+            <p>__str__, __repr__, __len__, __eq__, __add__, __iter__ and more</p>
+            <div class="links">
+              <a href="https://realpython.com/python-dunder-methods/" target="_blank" rel="noopener">Real Python — Magic Methods</a>
+            </div>
+          </article>
+
+          <!-- 14 -->
+          <article class="card" data-tags="generators advanced">
+            <h4 id="iter-gen">14. Iterators & Generators <span class="tag adv">Advanced</span></h4>
+            <p>iter, next, yield, generator expressions, send()</p>
+            <div class="links">
+              <a href="https://realpython.com/introduction-to-python-generators/" target="_blank" rel="noopener">Real Python — Generators</a>
+            </div>
+          </article>
+
+          <!-- 15 -->
+          <article class="card" data-tags="decorators advanced">
+            <h4 id="decorators">15. Decorators & Closures <span class="tag adv">Advanced</span></h4>
+            <p>First-class functions, closures, @decorator, functools.wraps</p>
+            <div class="links">
+              <a href="https://realpython.com/primer-on-python-decorators/" target="_blank" rel="noopener">Real Python — Decorators</a>
+            </div>
+          </article>
+
+          <!-- PART 4 header -->
+          <article class="card" style="grid-column:1/-1;background:linear-gradient(90deg,var(--red),#fb7185);color:#2b0216">
+            <h4 id="part4">📕 PART 4 — ADVANCED PYTHON</h4>
+            <p style="color:rgba(43,2,22,0.9)">Comprehensions, functional programming, concurrency, regex, typing, metaclasses.</p>
+          </article>
+
+          <!-- 16 -->
+          <article class="card" data-tags="comprehensions advanced">
+            <h4 id="comprehensions">16. Comprehensions <span class="tag adv">Advanced</span></h4>
+            <p>List, dict, set comprehensions, nested, conditional</p>
+            <div class="links">
+              <a href="https://realpython.com/list-comprehension-python/" target="_blank" rel="noopener">Real Python — Comprehensions</a>
+            </div>
+          </article>
+
+          <!-- 17 -->
+          <article class="card" data-tags="functional advanced">
+            <h4 id="functional">17. Functional Programming <span class="tag adv">Advanced</span></h4>
+            <p>map(), filter(), reduce(), zip(), enumerate(), partial()</p>
+            <div class="links">
+              <a href="https://realpython.com/python-functional-programming/" target="_blank" rel="noopener">Real Python — Functional Programming</a>
+            </div>
+          </article>
+
+          <!-- 18 -->
+          <article class="card" data-tags="async concurrency advanced">
+            <h4 id="concurrency">18. Concurrency & Async <span class="tag adv">Advanced</span></h4>
+            <p>threading, multiprocessing, asyncio, await/async, GIL</p>
+            <div class="links">
+              <a href="https://realpython.com/async-io-python/" target="_blank" rel="noopener">Real Python — Asyncio</a>
+              <a href="https://realpython.com/intro-to-python-threading/" target="_blank" rel="noopener">Real Python — Threading</a>
+            </div>
+          </article>
+
+          <!-- 19 -->
+          <article class="card" data-tags="regex advanced">
+            <h4 id="regex">19. Regular Expressions (re) <span class="tag adv">Advanced</span></h4>
+            <p>Patterns, groups, match/search/findall/sub, flags</p>
+            <div class="links">
+              <a href="https://realpython.com/regex-python/" target="_blank" rel="noopener">Real Python — Regex</a>
+              <a href="https://regex101.com/" target="_blank" rel="noopener">Regex101 — Interactive Tester</a>
+            </div>
+          </article>
+
+          <!-- 20 -->
+          <article class="card" data-tags="context managers advanced">
+            <h4 id="context">20. Context Managers <span class="tag adv">Advanced</span></h4>
+            <p>with statement, __enter__/__exit__, contextlib</p>
+            <div class="links">
+              <a href="https://realpython.com/python-with-statement/" target="_blank" rel="noopener">Real Python — Context Managers</a>
+            </div>
+          </article>
+
+          <!-- 21 -->
+          <article class="card" data-tags="typing advanced">
+            <h4 id="typing">21. Type Hints & Annotations <span class="tag adv">Advanced</span></h4>
+            <p>int, str, List, Dict, Optional, Union, TypeVar, Protocol</p>
+            <div class="links">
+              <a href="https://realpython.com/python-type-checking/" target="_blank" rel="noopener">Real Python — Type Checking</a>
+            </div>
+          </article>
+
+          <!-- 22 -->
+          <article class="card" data-tags="metaclasses advanced">
+            <h4 id="meta">22. Metaclasses & Descriptors <span class="tag adv">Advanced</span></h4>
+            <p>type(), __new__, metaclass=, property, get/set</p>
+            <div class="links">
+              <a href="https://realpython.com/python-metaclasses/" target="_blank" rel="noopener">Real Python — Metaclasses</a>
+            </div>
+          </article>
+
+          <!-- 23 -->
+          <article class="card" data-tags="performance advanced">
+            <h4 id="perf">23. Memory & Performance <span class="tag adv">Advanced</span></h4>
+            <p>profiling, cProfile, tracemalloc, __slots__, gc module</p>
+            <div class="links">
+              <a href="https://realpython.com/python-performance/" target="_blank" rel="noopener">Real Python — Python Performance</a>
+            </div>
+          </article>
+
+          <!-- PART 5 header -->
+          <article class="card" style="grid-column:1/-1;background:linear-gradient(90deg,#06b6d4,#7c3aed);color:#021025">
+            <h4 id="part5">🔬 PART 5 — STANDARD LIBRARY</h4>
+            <p style="color:rgba(2,16,37,0.9)">Essential stdlib modules and how to use them.</p>
+          </article>
+
+          <!-- 24 -->
+          <article class="card" data-tags="os sys pathlib stdlib">
+            <h4 id="os-sys">24. os, sys, pathlib <span class="tag lib">StdLib</span></h4>
+            <p>File system, env vars, paths, shell interaction</p>
+            <div class="links">
+              <a href="https://realpython.com/python-os-module/" target="_blank" rel="noopener">Real Python — os module</a>
+              <a href="https://realpython.com/python-pathlib/" target="_blank" rel="noopener">Real Python — pathlib</a>
+            </div>
+          </article>
+
+          <!-- 25 -->
+          <article class="card" data-tags="datetime time stdlib">
+            <h4 id="datetime">25. datetime & time <span class="tag lib">StdLib</span></h4>
+            <p>date, time, datetime, timedelta, strftime, strptime, timezone</p>
+            <div class="links">
+              <a href="https://realpython.com/python-datetime/" target="_blank" rel="noopener">Real Python — datetime</a>
+            </div>
+          </article>
+
+          <!-- 26 -->
+          <article class="card" data-tags="json csv xml stdlib">
+            <h4 id="json-csv">26. json, csv, xml <span class="tag lib">StdLib</span></h4>
+            <p>Parsing, reading, writing, ElementTree</p>
+            <div class="links">
+              <a href="https://realpython.com/python-json/" target="_blank" rel="noopener">Real Python — JSON</a>
+              <a href="https://realpython.com/python-csv/" target="_blank" rel="noopener">Real Python — CSV</a>
+            </div>
+          </article>
+
+          <!-- 27 -->
+          <article class="card" data-tags="collections itertools stdlib">
+            <h4 id="collections">27. collections & itertools <span class="tag lib">StdLib</span></h4>
+            <p>Counter, defaultdict, deque, namedtuple, chain, product, combinations</p>
+            <div class="links">
+              <a href="https://realpython.com/python-collections-module/" target="_blank" rel="noopener">Real Python — collections</a>
+              <a href="https://realpython.com/python-itertools/" target="_blank" rel="noopener">Real Python — itertools</a>
+            </div>
+          </article>
+
+          <!-- 28 -->
+          <article class="card" data-tags="math random statistics stdlib">
+            <h4 id="math-random">28. math, random, statistics <span class="tag lib">StdLib</span></h4>
+            <p>Math functions, RNG, mean, median, stdev</p>
+            <div class="links">
+              <a href="https://docs.python.org/3/library/math.html" target="_blank" rel="noopener">Python Docs — math</a>
+              <a href="https://realpython.com/python-random/" target="_blank" rel="noopener">Real Python — random</a>
+            </div>
+          </article>
+
+          <!-- 29 -->
+          <article class="card" data-tags="logging debugging stdlib">
+            <h4 id="logging">29. logging & debugging <span class="tag lib">StdLib</span></h4>
+            <p>logging module, levels, handlers, pdb debugger</p>
+            <div class="links">
+              <a href="https://realpython.com/python-logging/" target="_blank" rel="noopener">Real Python — Logging</a>
+            </div>
+          </article>
+
+          <!-- 30 -->
+          <article class="card" data-tags="subprocess shutil stdlib">
+            <h4 id="subprocess">30. subprocess & shutil <span class="tag lib">StdLib</span></h4>
+            <p>Running shell commands, file operations</p>
+            <div class="links">
+              <a href="https://realpython.com/python-subprocess/" target="_blank" rel="noopener">Real Python — subprocess</a>
+            </div>
+          </article>
+
+          <!-- PART 6 header -->
+          <article class="card" style="grid-column:1/-1;background:linear-gradient(90deg,#16a34a,#06b6d4);color:#021025">
+            <h4 id="part6">📦 PART 6 — KEY LIBRARIES</h4>
+            <p style="color:rgba(2,16,37,0.9)">Popular third-party libraries and tutorials.</p>
+          </article>
+
+          <!-- 31 -->
+          <article class="card" data-tags="numpy library">
+            <h4 id="numpy">31. NumPy <span class="tag lib">Library</span></h4>
+            <p>Numerical computing, arrays, broadcasting, linear algebra</p>
+            <div class="links">
+              <a href="https://numpy.org/doc/" target="_blank" rel="noopener">NumPy Official Docs</a>
+              <a href="https://realpython.com/numpy-tutorial/" target="_blank" rel="noopener">Real Python — NumPy</a>
+            </div>
+          </article>
+
+          <!-- 32 -->
+          <article class="card" data-tags="pandas library">
+            <h4 id="pandas">32. Pandas <span class="tag lib">Library</span></h4>
+            <p>DataFrames, data cleaning, groupby, merging, time series</p>
+            <div class="links">
+              <a href="https://pandas.pydata.org/docs/" target="_blank" rel="noopener">Pandas Official Docs</a>
+              <a href="https://realpython.com/pandas-python-explore-dataset/" target="_blank" rel="noopener">Real Python — Pandas</a>
+            </div>
+          </article>
+
+          <!-- 33 -->
+          <article class="card" data-tags="matplotlib seaborn library">
+            <h4 id="plotting">33. Matplotlib & Seaborn <span class="tag lib">Library</span></h4>
+            <p>Plotting, charts, heatmaps, styling</p>
+            <div class="links">
+              <a href="https://matplotlib.org/stable/tutorials/index.html" target="_blank" rel="noopener">Matplotlib Tutorials</a>
+              <a href="https://seaborn.pydata.org/" target="_blank" rel="noopener">Seaborn Official Docs</a>
+            </div>
+          </article>
+
+          <!-- 34 -->
+          <article class="card" data-tags="requests beautifulsoup library">
+            <h4 id="requests">34. Requests & BeautifulSoup <span class="tag lib">Library</span></h4>
+            <p>HTTP requests, web scraping</p>
+            <div class="links">
+              <a href="https://realpython.com/python-requests/" target="_blank" rel="noopener">Real Python — Requests</a>
+              <a href="https://realpython.com/beautiful-soup-web-scraper-python/" target="_blank" rel="noopener">Real Python — Web Scraping</a>
+            </div>
+          </article>
+
+          <!-- 35 -->
+          <article class="card" data-tags="flask library">
+            <h4 id="flask">35. Flask <span class="tag lib">Library</span></h4>
+            <p>Web framework, routes, templates, REST APIs</p>
+            <div class="links">
+              <a href="https://flask.palletsprojects.com/" target="_blank" rel="noopener">Flask Official Docs</a>
+              <a href="https://realpython.com/flask-by-example-part-1-project-setup/" target="_blank" rel="noopener">Real Python — Flask</a>
+            </div>
+          </article>
+
+          <!-- 36 -->
+          <article class="card" data-tags="fastapi library">
+            <h4 id="fastapi">36. FastAPI <span class="tag lib">Library</span></h4>
+            <p>Modern async API framework, Pydantic, OpenAPI</p>
+            <div class="links">
+              <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">FastAPI Official Docs</a>
+            </div>
+          </article>
+
+          <!-- 37 -->
+          <article class="card" data-tags="sqlalchemy library">
+            <h4 id="sqlalchemy">37. SQLAlchemy <span class="tag lib">Library</span></h4>
+            <p>ORM, database connections, queries, migrations</p>
+            <div class="links">
+              <a href="https://www.sqlalchemy.org/" target="_blank" rel="noopener">SQLAlchemy Docs</a>
+              <a href="https://realpython.com/python-sqlalchemy/" target="_blank" rel="noopener">Real Python — SQLAlchemy</a>
+            </div>
+          </article>
+
+          <!-- 38 -->
+          <article class="card" data-tags="scikit-learn library">
+            <h4 id="sklearn">38. Scikit-learn <span class="tag lib">Library</span></h4>
+            <p>Machine learning, classification, regression, clustering, pipelines</p>
+            <div class="links">
+              <a href="https://scikit-learn.org/stable/tutorial/index.html" target="_blank" rel="noopener">Scikit-learn Tutorials</a>
+              <a href="https://realpython.com/scikit-learn/" target="_blank" rel="noopener">Real Python — Scikit-learn</a>
+            </div>
+          </article>
+
+          <!-- 39 -->
+          <article class="card" data-tags="testing library">
+            <h4 id="testing">39. pytest & unittest <span class="tag lib">Library</span></h4>
+            <p>Unit tests, fixtures, mocking, parametrize</p>
+            <div class="links">
+              <a href="https://realpython.com/pytest-python-testing/" target="_blank" rel="noopener">Real Python — pytest</a>
+            </div>
+          </article>
+
+          <!-- 40 -->
+          <article class="card" data-tags="venv pip library">
+            <h4 id="venv">40. Virtual Environments & pip <span class="tag lib">Library</span></h4>
+            <p>venv, pipenv, poetry, requirements.txt, pyproject.toml</p>
+            <div class="links">
+              <a href="https://realpython.com/python-virtual-environments-a-primer/" target="_blank" rel="noopener">Real Python — Virtual Environments</a>
+            </div>
+          </article>
+
+          <!-- BONUS -->
+          <article class="card" id="bonus" style="grid-column:1/-1;background:linear-gradient(90deg,#f59e0b,#f97316);color:#2b1200">
+            <h4>🏆 BONUS — FULL COURSE RESOURCES</h4>
+            <p>Video courses, free books, practice platforms to master everything above.</p>
+            <div class="links">
+              <a href="https://www.youtube.com/watch?v=rfscVS0vtbw" target="_blank" rel="noopener">Python Full Course — freeCodeCamp (YouTube)</a>
+              <a href="https://cs50.harvard.edu/python/" target="_blank" rel="noopener">CS50P — Harvard's Python Course</a>
+              <a href="https://automatetheboringstuff.com/" target="_blank" rel="noopener">Automate the Boring Stuff with Python</a>
+              <a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">Python Docs Official Tutorial</a>
+              <a href="https://exercism.org/tracks/python" target="_blank" rel="noopener">Exercism — Python Practice</a>
+              <a href="https://leetcode.com/" target="_blank" rel="noopener">LeetCode — Practice Problems</a>
+            </div>
+          </article>
+        </div>
+
+        <footer>
+          <p>Tip: Use the search box to filter topics. Click any resource to open it in a new tab. To save a local copy: File → Save Page As (HTML) or Print → Save as PDF.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Search/filter
+    const input = document.getElementById('searchInput');
+    const cards = Array.from(document.querySelectorAll('.card'));
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      cards.forEach(card => {
+        const text = (card.innerText || '').toLowerCase();
+        card.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+    function resetSearch(){ input.value=''; input.dispatchEvent(new Event('input')); }
+
+    // Toggle view (grid / list)
+    let gridOn = true;
+    function toggleView(){
+      const grid = document.querySelector('.grid');
+      gridOn = !gridOn;
+      grid.style.gridTemplateColumns = gridOn ? 'repeat(auto-fill,minmax(280px,1fr))' : '1fr';
+    }
+
+    // Scroll progress
+    const main = document.querySelector('.content');
+    const progress = document.getElementById('progress');
+    main.addEventListener('scroll', () => {
+      const pct = Math.min(100, Math.round((main.scrollTop / (main.scrollHeight - main.clientHeight)) * 100));
+      progress.style.width = pct + '%';
+    });
+
+    // Smooth anchor scrolling
+    document.querySelectorAll('nav.index a').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const href = a.getAttribute('href');
+        const el = document.querySelector(href);
+        if(el){
+          el.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    });
+
+    // Keyboard: focus search with "/" key
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === '/' && document.activeElement !== input){
+        e.preventDefault(); input.focus();
+      }
+    });
+
+    // Accessibility: ensure links open in new tab with noopener
+    document.querySelectorAll('.links a').forEach(a=>{
+      a.setAttribute('target','_blank');
+      a.setAttribute('rel','noopener');
+    });
+  </script>
+</body>
+</html>
