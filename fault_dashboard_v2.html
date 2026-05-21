@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChargePoint — Fault Reference</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --cp-orange:   #f47920;
+    --cp-orange-d: #d4631a;
+    --cp-orange-l: #fff3ea;
+    --cp-blue:     #003865;
+    --cp-blue-l:   #e8eef4;
+    --bg:          #f4f5f7;
+    --white:       #ffffff;
+    --border:      #dde1e7;
+    --text:        #1a2332;
+    --muted:       #6b7685;
+    --surface:     #ffffff;
+
+    --sev-emergency-bg: #fef2f2; --sev-emergency-text: #b91c1c; --sev-emergency-dot: #ef4444;
+    --sev-critical-bg:  #fff7ed; --sev-critical-text:  #c2410c; --sev-critical-dot:  #f97316;
+    --sev-major-bg:     #fefce8; --sev-major-text:     #92400e; --sev-major-dot:     #eab308;
+    --sev-minor-bg:     #eff6ff; --sev-minor-text:     #1d4ed8; --sev-minor-dot:     #3b82f6;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── Top Nav (ChargePoint style) ── */
+  .topnav {
+    background: var(--white);
+    border-bottom: 3px solid var(--cp-orange);
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 300;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+
+  .cp-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  /* ChargePoint logo */
+  .cp-logo-svg { height: 34px; width: auto; }
+
+  .nav-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cp-blue);
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
+    letter-spacing: -.2px;
+  }
+
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-badge {
+    background: var(--cp-orange-l);
+    color: var(--cp-orange-d);
+    border: 1px solid #f4c49a;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── Sub-nav tabs (like ChargePoint's General / Status / Config tabs) ── */
+  .subnav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+  }
+
+  .subnav-tab {
+    padding: 10px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all .15s;
+    user-select: none;
+  }
+
+  .subnav-tab:hover { color: var(--cp-orange); }
+
+  .subnav-tab.active {
+    color: var(--cp-orange);
+    border-bottom-color: var(--cp-orange);
+  }
+
+  /* ── Severity summary cards ── */
+  .sev-cards {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px;
+    flex-wrap: wrap;
+  }
+
+  .sev-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    min-width: 120px;
+    cursor: pointer;
+    transition: all .15s;
+    border-top: 3px solid transparent;
+    flex: 1;
+  }
+
+  .sev-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); transform: translateY(-1px); }
+
+  .sev-card.active-card { box-shadow: 0 2px 8px rgba(0,0,0,.12); transform: translateY(-1px); }
+
+  .sev-card.card-all        { border-top-color: var(--cp-orange); }
+  .sev-card.card-emergency  { border-top-color: var(--sev-emergency-dot); }
+  .sev-card.card-critical   { border-top-color: var(--sev-critical-dot); }
+  .sev-card.card-major      { border-top-color: var(--sev-major-dot); }
+  .sev-card.card-minor      { border-top-color: var(--sev-minor-dot); }
+
+  .sev-card-num  { font-size: 26px; font-weight: 700; line-height: 1; color: var(--text); }
+  .sev-card-lbl  { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+
+  .sev-card.card-all        .sev-card-num { color: var(--cp-orange); }
+  .sev-card.card-emergency  .sev-card-num { color: var(--sev-emergency-text); }
+  .sev-card.card-critical   .sev-card-num { color: var(--sev-critical-text); }
+  .sev-card.card-major      .sev-card-num { color: var(--sev-major-text); }
+  .sev-card.card-minor      .sev-card-num { color: var(--sev-minor-text); }
+
+  /* ── Controls bar ── */
+  .controls-bar {
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 260px;
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 8px 12px 8px 34px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    font-family: inherit;
+  }
+
+  .search-wrap input:focus {
+    border-color: var(--cp-orange);
+    box-shadow: 0 0 0 3px rgba(244,121,32,.12);
+  }
+
+  select {
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .15s;
+  }
+
+  select:focus { border-color: var(--cp-orange); }
+
+  .btn-clear {
+    background: var(--white);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+
+  .btn-clear:hover { border-color: var(--cp-orange); color: var(--cp-orange); }
+
+  /* ── Results info bar ── */
+  .results-bar {
+    padding: 8px 24px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-bar strong { color: var(--text); }
+
+  /* ── Table ── */
+  .table-wrap {
+    margin: 0 24px 16px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead {
+    background: var(--cp-blue);
+  }
+
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,.85);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color .12s;
+  }
+
+  th:hover { color: #ffffff; }
+  th.sorted { color: var(--cp-orange); }
+  th .arr { opacity: .5; margin-left: 4px; font-size: 10px; }
+  th.sorted .arr { opacity: 1; }
+
+  tbody tr {
+    border-top: 1px solid var(--border);
+    transition: background .1s;
+    cursor: pointer;
+  }
+
+  tbody tr:hover { background: var(--cp-orange-l); }
+
+  td {
+    padding: 10px 14px;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  .col-sno    { color: var(--muted); font-size: 12px; width: 44px; }
+  .col-urn    { font-family: 'Courier New', Consolas, monospace; font-size: 11.5px; max-width: 200px; word-break: break-all; }
+  .col-comp   { font-size: 12px; max-width: 90px; }
+  .col-model  { font-size: 11.5px; max-width: 160px; }
+  .col-what   { max-width: 240px; }
+  .col-action { max-width: 180px; color: var(--muted); }
+  .col-poa    { max-width: 160px; font-size: 12px; color: var(--muted); }
+  .col-cli    { max-width: 140px; font-family: 'Courier New', Consolas, monospace; font-size: 11px; color: var(--muted); }
+
+  /* URN highlight — shows component in orange */
+  .urn-component { color: var(--cp-orange); font-weight: 700; }
+  .urn-fault     { color: var(--cp-blue); }
+
+  /* Severity badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .badge.emergency { background: var(--sev-emergency-bg); color: var(--sev-emergency-text); }
+  .badge.emergency::before { background: var(--sev-emergency-dot); }
+  .badge.critical  { background: var(--sev-critical-bg);  color: var(--sev-critical-text); }
+  .badge.critical::before  { background: var(--sev-critical-dot); }
+  .badge.major     { background: var(--sev-major-bg);     color: var(--sev-major-text); }
+  .badge.major::before     { background: var(--sev-major-dot); }
+  .badge.minor     { background: var(--sev-minor-bg);     color: var(--sev-minor-text); }
+  .badge.minor::before     { background: var(--sev-minor-dot); }
+  .badge.unknown   { background: #f1f5f9; color: #64748b; }
+  .badge.unknown::before   { background: #94a3b8; }
+
+  /* Model tags */
+  .model-tag {
+    display: inline-block;
+    background: var(--cp-blue-l);
+    color: var(--cp-blue);
+    border: 1px solid #c5d4e8;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10.5px;
+    font-weight: 600;
+    margin: 1px 1px 1px 0;
+  }
+
+  .model-tag.warn-model {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde68a;
+  }
+
+  /* CLI tag */
+  .cli-pill {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+
+  /* POA tag */
+  .poa-pill {
+    display: inline-block;
+    background: #faf5ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    margin: 0 24px 24px;
+    border-radius: 0 0 8px 8px;
+    font-size: 12px;
+    color: var(--muted);
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.05);
+  }
+
+  .pg-btns { display: flex; gap: 4px; }
+
+  .pg-btn {
+    background: var(--white);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 5px;
+    padding: 5px 11px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: all .12s;
+  }
+
+  .pg-btn:hover { border-color: var(--cp-orange); color: var(--cp-orange); }
+  .pg-btn[disabled] { opacity: .35; cursor: default; pointer-events: none; }
+  .pg-btn.active { background: var(--cp-orange); border-color: var(--cp-orange); color: #fff; font-weight: 700; }
+
+  /* ── Loading / upload screen ── */
+  .center-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 52px);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .center-icon  { font-size: 48px; margin-bottom: 16px; }
+  .center-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .center-sub   { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 28px; max-width: 440px; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cp-orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    padding: 11px 22px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover { background: var(--cp-orange-d); }
+
+  /* ── Modal ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,30,60,.5);
+    z-index: 500;
+    backdrop-filter: blur(2px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    position: relative;
+  }
+
+  .modal-header {
+    background: var(--cp-blue);
+    padding: 20px 24px;
+    border-radius: 10px 10px 0 0;
+    position: relative;
+  }
+
+  .modal-header-sno   { font-size: 11px; color: rgba(255,255,255,.6); margin-bottom: 4px; }
+  .modal-header-urn   { font-family: 'Courier New', monospace; font-size: 13px; color: var(--cp-orange); margin-bottom: 10px; word-break: break-all; }
+  .modal-header-title { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.4; }
+  .modal-header-meta  { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  .modal-x {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: rgba(255,255,255,.15);
+    border: none;
+    color: rgba(255,255,255,.8);
+    border-radius: 5px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background .12s;
+  }
+
+  .modal-x:hover { background: rgba(255,255,255,.3); color: #fff; }
+
+  .modal-body { padding: 24px; }
+
+  .modal-sec { margin-bottom: 20px; }
+
+  .modal-sec-lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .modal-sec-body {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cp-orange);
+    border-radius: 6px;
+    padding: 13px 15px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .modal-sec-body.mono {
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 12px;
+    border-left-color: #166534;
+    background: #f0fdf4;
+  }
+
+  .modal-sec-body.poa-body {
+    border-left-color: #6b21a8;
+    background: #faf5ff;
+  }
+
+  .modal-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* badge in modal header (white bg) */
+  .badge-inv {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 4px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+  }
+
+  .badge-inv::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .badge-inv.emergency::before { background: #ef4444; }
+  .badge-inv.critical::before  { background: #f97316; }
+  .badge-inv.major::before     { background: #eab308; }
+  .badge-inv.minor::before     { background: #3b82f6; }
+
+  /* ── Search highlight ── */
+  mark {
+    background: #fde68a;
+    color: #92400e;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  @media (max-width: 700px) {
+    .sev-cards { padding: 12px; }
+    .col-model, .col-poa, .col-cli { display: none; }
+    .table-wrap, .pagination { margin-left: 12px; margin-right: 12px; }
+    .controls-bar, .results-bar { padding-left: 12px; padding-right: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="topnav">
+  <!-- ChargePoint logo — uses chargepoint-logo.png from the same folder -->
+  <a class="cp-logo" href="#" title="ChargePoint">
+    <img src="chargepoint-logo.png" alt="ChargePoint" style="height:32px;width:auto;display:block;">
+  </a>
+  <div class="nav-title">Fault Reference</div>
+  <div class="nav-right">
+    <div class="nav-badge" id="hcount">Loading…</div>
+  </div>
+</nav>
+
+<!-- ── Sub-nav tabs ── -->
+<div class="subnav">
+  <div class="subnav-tab active" onclick="setSev('')">All Faults</div>
+  <div class="subnav-tab" onclick="setSev('critical')">Critical</div>
+  <div class="subnav-tab" onclick="setSev('major')">Major</div>
+  <div class="subnav-tab" onclick="setSev('minor')">Minor</div>
+</div>
+
+<!-- ── Main app ── -->
+<div id="root">
+  <div class="center-screen">
+    <div class="center-icon">⚡</div>
+    <div class="center-title">Loading fault data…</div>
+    <div class="center-sub">Please wait while we load the fault reference database.</div>
+  </div>
+</div>
+
+<!-- ── Modal ── -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modal-header">
+      <button class="modal-x" id="modal-x">✕</button>
+      <div id="modal-header-body"></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// CONFIG — update this if your CSV filename changes
+// ════════════════════════════════════════════════════════════════════════════
+const CSV_FILENAME = 'merged_output-5ca1fafe.csv';
+
+// ════════════════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════════════════
+let ALL = [], FILTERED = [];
+let sortKey = 'sno', sortDir = 1;
+let pg = 1;
+const PER = 60;
+const SEV_RANK = { emergency:0, critical:1, major:2, minor:3 };
+const sevRank = s => SEV_RANK[(s||'').toLowerCase()] ?? 9;
+
+// Active filters
+let activeSev   = '';
+let activeModel = '';
+let searchQ     = '';
+
+// ════════════════════════════════════════════════════════════════════════════
+// PARSE
+// ════════════════════════════════════════════════════════════════════════════
+function parseCSV(text) {
+  const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+  return result.data.map((r, i) => {
+    const sno    = parseInt(r['SNO'] || r['sno'] || i + 1) || i + 1;
+    const urn    = (r['Fault URN'] || r['fault urn'] || r['Fault_URN'] || '').trim();
+    const model  = (r['Model(s)'] || r['model(s)'] || r['Models'] || r['model'] || '').trim();
+    const sev    = (r['Severity'] || r['severity'] || '').trim();
+    const what   = (r['What It Means'] || r['what it means'] || r['What_It_Means'] || '').trim();
+    const action = (r['Recommended Action'] || r['recommended action'] || r['Recommended_Action'] || '').trim();
+    const poa    = (r['POA'] || r['poa'] || '').trim();
+    const cli    = (r['CLI checks'] || r['cli checks'] || r['CLI_checks'] || r['CLI'] || '').trim();
+
+    if (!urn && !what) return null;
+
+    const parts     = urn.split(':');
+    const component = parts[0] || '';
+    const faultName = parts.slice(1).join(':');
+
+    // Full URN for search (with and without prefix)
+    const fullUrn = `urn:fault:${urn}`;
+
+    const models        = model.split(',').map(m => m.trim()).filter(Boolean);
+    const hasModelWarn  = model.includes('⚠️') || model.includes('NOT');
+
+    return { sno, urn, fullUrn, component, faultName, model, models, hasModelWarn, sev, what, action, poa, cli };
+  }).filter(Boolean);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SMART SEARCH
+// Matches if query appears in:
+//   - raw urn (e.g. "acb:over-temp")
+//   - full urn (e.g. "urn:fault:acb:over-temp")
+//   - component only (e.g. "acb")
+//   - fault name only (e.g. "over-temp")
+//   - description, action, model, poa, cli
+// Strips "urn:fault:" or "urn:" prefix from query before matching so
+// pasting a full URN from another tool always works.
+// ════════════════════════════════════════════════════════════════════════════
+function normalizeQuery(q) {
+  // strip leading "urn:fault:" or "urn:" so full URN paste works
+  return q.replace(/^urn:fault:/i, '').replace(/^urn:/i, '').toLowerCase().trim();
+}
+
+function matchesFault(f, q) {
+  if (!q) return true;
+  const nq = normalizeQuery(q);
+  // Build a search haystack that covers all angles
+  const hay = [
+    f.urn,          // "acb:over-temp"
+    f.fullUrn,      // "urn:fault:acb:over-temp"
+    f.component,    // "acb"
+    f.faultName,    // "over-temp"
+    f.what,
+    f.action,
+    f.model,
+    f.poa,
+    f.cli,
+    String(f.sno),
+  ].join(' ').toLowerCase();
+  // Support multi-word queries (all words must match)
+  return nq.split(/\s+/).every(word => hay.includes(word));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FILTERS & SORT
+// ════════════════════════════════════════════════════════════════════════════
+function applyFilters() {
+  FILTERED = ALL.filter(f => {
+    if (activeSev && f.sev.toLowerCase() !== activeSev) return false;
+    if (activeModel && !f.model.toLowerCase().includes(activeModel.toLowerCase())) return false;
+    if (searchQ && !matchesFault(f, searchQ)) return false;
+    return true;
+  });
+  doSort();
+  pg = 1;
+  refreshUI();
+}
+
+function doSort() {
+  FILTERED.sort((a, b) => {
+    if (sortKey === 'sev') {
+      const d = sevRank(a.sev) - sevRank(b.sev);
+      return d !== 0 ? d * sortDir : a.sno - b.sno;
+    }
+    if (sortKey === 'sno') return (a.sno - b.sno) * sortDir;
+    const av = (a[sortKey] || '').toLowerCase();
+    const bv = (b[sortKey] || '').toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+}
+
+function setSort(key) {
+  if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
+  doSort();
+  refreshUI();
+}
+
+function setSev(s) {
+  activeSev = s;
+  // sync subnav tabs (no emergency tab)
+  document.querySelectorAll('.subnav-tab').forEach((t, i) => {
+    const map = ['', 'critical', 'major', 'minor'];
+    t.classList.toggle('active', map[i] === s);
+  });
+  applyFilters();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function trunc(s, n) { return s && s.length > n ? s.slice(0, n) + '…' : (s || ''); }
+
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function badge(sev) {
+  const cls = (sev || 'unknown').toLowerCase();
+  return `<span class="badge ${cls}">${esc(sev) || '—'}</span>`;
+}
+
+function badgeInv(sev) {
+  const cls = (sev || 'unknown').toLowerCase();
+  return `<span class="badge-inv ${cls}">${esc(sev) || '—'}</span>`;
+}
+
+function modelTags(f) {
+  if (!f.models.length) return esc(f.model) || '—';
+  return f.models.map(m => {
+    const isW  = m.includes('⚠️') || m.includes('NOT');
+    const clean = m.replace(/⚠️/g, '').trim();
+    return `<span class="model-tag${isW ? ' warn-model' : ''}" title="${esc(m)}">${esc(clean)}</span>`;
+  }).join('');
+}
+
+function urnHTML(f) {
+  return `<span class="urn-component">${esc(f.component)}</span><span style="color:var(--muted)">:</span><span class="urn-fault">${esc(f.faultName)}</span>`;
+}
+
+function countSev(arr, s) { return arr.filter(f => f.sev.toLowerCase() === s).length; }
+
+function getModelOptions() {
+  const set = new Set();
+  ALL.forEach(f => f.models.forEach(m => {
+    const clean = m.replace(/⚠️.*$/, '').trim();
+    if (clean) set.add(clean);
+  }));
+  return [...set].sort();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDER SECTIONS
+// ════════════════════════════════════════════════════════════════════════════
+function renderSevCards() {
+  const cards = [
+    { cls: 'all',      label: 'All Faults', val: FILTERED.length,              sev: '' },
+    { cls: 'critical', label: 'Critical',   val: countSev(FILTERED,'critical'), sev: 'critical' },
+    { cls: 'major',    label: 'Major',      val: countSev(FILTERED,'major'),    sev: 'major' },
+    { cls: 'minor',    label: 'Minor',      val: countSev(FILTERED,'minor'),    sev: 'minor' },
+  ];
+  return `<div class="sev-cards">${cards.map(c =>
+    `<div class="sev-card card-${c.cls}${activeSev === c.sev ? ' active-card' : ''}" onclick="setSev('${c.sev}')">
+      <div class="sev-card-num">${c.val}</div>
+      <div class="sev-card-lbl">${c.label}</div>
+    </div>`
+  ).join('')}</div>`;
+}
+
+function renderControls() {
+  const modelOpts = getModelOptions().map(m =>
+    `<option value="${esc(m)}"${activeModel === m ? ' selected' : ''}>${esc(m)}</option>`
+  ).join('');
+  return `<div class="controls-bar">
+    <div class="search-wrap">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="srch"
+        placeholder="Search by URN (full or partial), description, model, action…"
+        value="${esc(searchQ)}"
+        oninput="searchQ=this.value; applyFilters()">
+    </div>
+    <select onchange="activeModel=this.value; applyFilters()">
+      <option value="">All Models</option>${modelOpts}
+    </select>
+    <select onchange="setSort(this.value)">
+      <option value="sno"${sortKey==='sno'?' selected':''}>Sort: # (default)</option>
+      <option value="sev"${sortKey==='sev'?' selected':''}>Sort: Severity</option>
+      <option value="component"${sortKey==='component'?' selected':''}>Sort: Component</option>
+      <option value="urn"${sortKey==='urn'?' selected':''}>Sort: URN</option>
+    </select>
+    ${searchQ || activeSev || activeModel
+      ? `<button class="btn-clear" onclick="clearAll()">✕ Clear filters</button>`
+      : ''}
+  </div>`;
+}
+
+function clearAll() {
+  searchQ = ''; activeSev = ''; activeModel = '';
+  document.querySelectorAll('.subnav-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  applyFilters();
+}
+
+function renderResultsBar() {
+  const total = FILTERED.length;
+  const s = (pg - 1) * PER + 1;
+  const e = Math.min(pg * PER, total);
+  if (!total) return '';
+  return `<div class="results-bar">
+    Showing <strong>${s}–${e}</strong> of <strong>${total}</strong> fault codes
+    ${ALL.length !== total ? `<span style="color:var(--cp-orange)">· filtered from ${ALL.length} total</span>` : ''}
+  </div>`;
+}
+
+function arr(key) { return sortKey === key ? (sortDir === 1 ? '↑' : '↓') : '↕'; }
+function sc(key)  { return sortKey === key ? 'sorted' : ''; }
+
+function renderTable() {
+  const slice = FILTERED.slice((pg - 1) * PER, pg * PER);
+
+  if (!slice.length) {
+    return `<div class="table-wrap"><div class="empty">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No faults match your search</div>
+      <div style="margin-top:8px;color:var(--muted);font-size:13px">
+        Try a different keyword, partial URN, or clear your filters.
+      </div>
+    </div></div>`;
+  }
+
+  const rows = slice.map((f, i) => {
+    const idx = (pg - 1) * PER + i;
+    const poaDisp = f.poa
+      ? trunc(f.poa, 60)
+      : `<span style="color:#ccc">—</span>`;
+    const cliDisp = f.cli
+      ? trunc(f.cli, 50)
+      : `<span style="color:#ccc">—</span>`;
+
+    return `<tr onclick="openModal(${idx})">
+      <td class="col-sno">${f.sno}</td>
+      <td class="col-urn">${urnHTML(f)}</td>
+      <td class="col-comp">${esc(f.component)}</td>
+      <td class="col-model">${modelTags(f)}</td>
+      <td>${badge(f.sev)}</td>
+      <td class="col-what">${esc(trunc(f.what, 85))}</td>
+      <td class="col-action">${esc(trunc(f.action, 70))}</td>
+      <td class="col-poa">${f.poa ? esc(poaDisp) : '<span style="color:#ccc">—</span>'}</td>
+      <td class="col-cli">${f.cli ? esc(cliDisp) : '<span style="color:#ccc">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="${sc('sno')}"  onclick="setSort('sno')">#<span class="arr">${arr('sno')}</span></th>
+        <th class="${sc('urn')}"  onclick="setSort('urn')">Fault URN<span class="arr">${arr('urn')}</span></th>
+        <th class="${sc('component')}" onclick="setSort('component')">Component<span class="arr">${arr('component')}</span></th>
+        <th class="${sc('model')}" onclick="setSort('model')">Model(s)<span class="arr">${arr('model')}</span></th>
+        <th class="${sc('sev')}"  onclick="setSort('sev')">Severity<span class="arr">${arr('sev')}</span></th>
+        <th class="${sc('what')}" onclick="setSort('what')">What It Means<span class="arr">${arr('what')}</span></th>
+        <th>Recommended Action</th>
+        <th class="${sc('poa')}" onclick="setSort('poa')">POA<span class="arr">${arr('poa')}</span></th>
+        <th class="${sc('cli')}" onclick="setSort('cli')">CLI Checks<span class="arr">${arr('cli')}</span></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderPagination() {
+  const total = Math.ceil(FILTERED.length / PER);
+  if (total <= 1) return '';
+  const s = (pg - 1) * PER + 1;
+  const e = Math.min(pg * PER, FILTERED.length);
+  const lo = Math.max(1, pg - 2), hi = Math.min(total, pg + 2);
+  let btns = '';
+  if (lo > 1) btns += `<button class="pg-btn" onclick="goPage(1)">1</button>${lo > 2 ? '<span style="padding:0 4px;color:var(--muted)">…</span>' : ''}`;
+  for (let p = lo; p <= hi; p++) btns += `<button class="pg-btn${p===pg?' active':''}" onclick="goPage(${p})">${p}</button>`;
+  if (hi < total) btns += `${hi < total-1 ? '<span style="padding:0 4px;color:var(--muted)">…</span>' : ''}<button class="pg-btn" onclick="goPage(${total})">${total}</button>`;
+  return `<div class="pagination">
+    <span>Page <strong>${pg}</strong> of <strong>${total}</strong></span>
+    <div class="pg-btns">
+      <button class="pg-btn" onclick="goPage(${pg-1})" ${pg===1?'disabled':''}>‹ Prev</button>
+      ${btns}
+      <button class="pg-btn" onclick="goPage(${pg+1})" ${pg===total?'disabled':''}>Next ›</button>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FULL RENDER
+// ════════════════════════════════════════════════════════════════════════════
+function renderApp() {
+  document.getElementById('root').innerHTML = `
+    <div id="sev-cards-wrap">${renderSevCards()}</div>
+    <div id="controls-wrap">${renderControls()}</div>
+    <div id="results-bar-wrap">${renderResultsBar()}</div>
+    <div id="table-wrap">${renderTable()}</div>
+    <div id="pager">${renderPagination()}</div>
+  `;
+  updateHeaderCount();
+}
+
+function refreshUI() {
+  document.getElementById('sev-cards-wrap').innerHTML  = renderSevCards();
+  document.getElementById('controls-wrap').innerHTML   = renderControls();
+  document.getElementById('results-bar-wrap').innerHTML = renderResultsBar();
+  document.getElementById('table-wrap').innerHTML      = renderTable();
+  document.getElementById('pager').innerHTML           = renderPagination();
+  updateHeaderCount();
+  // Re-focus search box
+  const s = document.getElementById('srch');
+  if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+}
+
+function updateHeaderCount() {
+  document.getElementById('hcount').textContent =
+    FILTERED.length === ALL.length
+      ? `${ALL.length} faults`
+      : `${FILTERED.length} / ${ALL.length} faults`;
+}
+
+function goPage(p) {
+  pg = p;
+  document.getElementById('table-wrap').innerHTML = renderTable();
+  document.getElementById('pager').innerHTML      = renderPagination();
+  document.getElementById('results-bar-wrap').innerHTML = renderResultsBar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════════════════════════
+function openModal(idx) {
+  const f = FILTERED[idx];
+  if (!f) return;
+
+  document.getElementById('modal-header-body').innerHTML = `
+    <div class="modal-header-sno">Fault #${f.sno}</div>
+    <div class="modal-header-urn">urn:fault:${esc(f.urn)}</div>
+    <div class="modal-header-title">${esc(f.what) || '—'}</div>
+    <div class="modal-header-meta">
+      ${badgeInv(f.sev)}
+      <span style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border-radius:4px;padding:2px 9px;font-size:11px;font-weight:600;">
+        ${esc(f.component)}
+      </span>
+    </div>`;
+
+  let body = `
+    <div class="modal-sec">
+      <div class="modal-sec-lbl">🖥 Affected Models</div>
+      <div class="modal-sec-body">${modelTags(f)}
+        ${f.hasModelWarn ? `<div style="margin-top:8px;font-size:12px;color:#92400e">⚠️ This fault does not apply to all model variants — check tags above.</div>` : ''}
+      </div>
+    </div>
+    <hr class="modal-divider">
+    <div class="modal-sec">
+      <div class="modal-sec-lbl">🔧 Recommended Action</div>
+      <div class="modal-sec-body">${esc(f.action) || '—'}</div>
+    </div>`;
+
+  if (f.poa) {
+    body += `<div class="modal-sec">
+      <div class="modal-sec-lbl">📋 Plan of Action (POA)</div>
+      <div class="modal-sec-body poa-body">${esc(f.poa)}</div>
+    </div>`;
+  }
+
+  body += `<div class="modal-sec">
+    <div class="modal-sec-lbl">💻 CLI Checks</div>
+    <div class="modal-sec-body mono">${f.cli ? esc(f.cli) : '<span style="color:#94a3b8;font-style:italic">No CLI checks defined yet — data will be added here.</span>'}</div>
+  </div>`;
+
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('overlay').classList.add('open');
+}
+
+document.getElementById('modal-x').addEventListener('click', closeModal);
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// CSV LOAD  — tries fetch() first (works when opened via file server or
+// Chrome with --allow-file-access-from-files), falls back to file picker.
+// ════════════════════════════════════════════════════════════════════════════
+function initWithData(text) {
+  ALL      = parseCSV(text);
+  FILTERED = [...ALL];
+  doSort();
+  renderApp();
+}
+
+function showFilePicker(reason) {
+  document.getElementById('root').innerHTML = `
+    <div class="center-screen">
+      <div class="center-icon">📋</div>
+      <div class="center-title">ChargePoint Fault Reference</div>
+      <div class="center-sub">
+        ${reason}<br><br>
+        Place <strong>${esc(CSV_FILENAME)}</strong> in the same folder as this HTML file,
+        or pick it manually below.
+      </div>
+      <label class="btn-primary" for="file-in" style="cursor:pointer">📂 Choose CSV File</label>
+      <input type="file" id="file-in" accept=".csv" style="display:none">
+    </div>`;
+  document.getElementById('file-in').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { initWithData(ev.target.result); }
+      catch (err) {
+        document.getElementById('root').innerHTML =
+          `<div class="center-screen"><div class="center-icon">❌</div><div class="center-title">Parse error</div><p style="color:var(--muted)">${esc(err.message)}</p></div>`;
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Try auto-loading the CSV from the same directory
+fetch(CSV_FILENAME)
+  .then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.text();
+  })
+  .then(text => initWithData(text))
+  .catch(err => {
+    // fetch() blocked by browser (local file:// restriction) — show picker
+    const isLocalFile = location.protocol === 'file:';
+    const reason = isLocalFile
+      ? 'Your browser blocked auto-loading because the file is opened locally (file://).<br>To enable auto-load, open via a local server (VS Code Live Server, Python http.server, etc.).'
+      : `Could not load <strong>${esc(CSV_FILENAME)}</strong> automatically.`;
+    showFilePicker(reason);
+  });
+</script>
+</body>
+</html>
